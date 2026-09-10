@@ -1,0 +1,1 @@
+(self.webpackChunktradingview=self.webpackChunktradingview||[]).push([[8245],{760724:e=>{e.exports={en:["Hide data"],fa:["مخفی کردن داده ها"]}},198337:e=>{e.exports={en:["Show data"],fa:["Show data"]}},351382:e=>{e.exports={en:["show {title}"],fa:["show {title}"]}}}]);

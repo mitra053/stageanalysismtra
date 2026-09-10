@@ -1,0 +1,1 @@
+(self.webpackChunktradingview=self.webpackChunktradingview||[]).push([[5735],{464770:e=>{e.exports={en:["Confirmation"],ja:["確認"]}},278921:e=>{e.exports={en:["Don't ask again"],ja:["再度尋ねない"]}},885888:e=>{e.exports={en:["No results found"],ja:["該当なし"]}},664e3:e=>{e.exports={en:["Save"],ja:["保存"]}},606321:e=>{e.exports={en:["Rename"],ja:["名前の変更"]}}}]);

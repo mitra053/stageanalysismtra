@@ -1,0 +1,471 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Stage Analysis Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+      :root {
+        --page-bg: #020817;
+        --page-bg-2: #0f172a;
+        --panel: rgba(15,23,42,0.96);
+        --panel-soft: rgba(15,23,42,0.88);
+        --text: #e2e8f0;
+        --text-soft: #94a3b8;
+        --line: rgba(148,163,184,0.18);
+        --shadow: rgba(2,6,23,0.38);
+      }
+
+      body {
+        font-family: 'Inter', sans-serif;
+        background:
+          radial-gradient(circle at top left, rgba(99,102,241,0.18), transparent 22%),
+          radial-gradient(circle at bottom right, rgba(34,211,238,0.06), transparent 28%),
+          linear-gradient(180deg, var(--page-bg) 0%, var(--page-bg-2) 35%, #111827 100%);
+        color: var(--text);
+        transition: background 0.2s ease, color 0.2s ease;
+      }
+
+      body[data-theme="light"] {
+        --page-bg: #f8fafc;
+        --page-bg-2: #eef2ff;
+        --panel: rgba(255,255,255,0.96);
+        --panel-soft: rgba(248,250,252,0.96);
+        --text: #0f172a;
+        --text-soft: #475569;
+        --line: rgba(148,163,184,0.32);
+        --shadow: rgba(15,23,42,0.08);
+      }
+
+      .glass-card {
+        background: linear-gradient(180deg, var(--panel), var(--panel-soft));
+        backdrop-filter: blur(8px);
+        box-shadow: 0 12px 28px var(--shadow), 0 0 0 1px rgba(99, 102, 241, 0.08);
+        border: 1px solid var(--line);
+        color: var(--text);
+      }
+      .glass-card *, .glass-card h1, .glass-card h2, .glass-card h3, .glass-card p, .glass-card span, .glass-card label, .glass-card th, .glass-card td {
+        color: inherit;
+      }
+
+      body[data-theme="light"] .bg-slate-900,
+      body[data-theme="light"] .bg-slate-800,
+      body[data-theme="light"] .bg-slate-950,
+      body[data-theme="light"] .bg-slate-100,
+      body[data-theme="light"] .bg-slate-50,
+      body[data-theme="light"] .bg-slate-900\/80,
+      body[data-theme="light"] .bg-slate-900\/95 {
+        background-color: var(--panel) !important;
+        border-color: var(--line) !important;
+      }
+
+      body[data-theme="light"] .text-slate-100,
+      body[data-theme="light"] .text-slate-200,
+      body[data-theme="light"] .text-slate-300,
+      body[data-theme="light"] .text-slate-400,
+      body[data-theme="light"] .text-slate-500,
+      body[data-theme="light"] .text-slate-600,
+      body[data-theme="light"] .text-slate-700,
+      body[data-theme="light"] .text-slate-800,
+      body[data-theme="light"] .text-slate-900 {
+        color: var(--text) !important;
+      }
+
+      body[data-theme="light"] .border-slate-200,
+      body[data-theme="light"] .border-slate-300,
+      body[data-theme="light"] .border-slate-700,
+      body[data-theme="light"] .border-slate-800 {
+        border-color: var(--line) !important;
+      }
+
+      body[data-theme="aurora"] {
+        --page-bg: #061521;
+        --page-bg-2: #0b1d2d;
+        --panel: rgba(13, 34, 56, 0.96);
+        --panel-soft: rgba(16, 39, 67, 0.92);
+        --text: #ebf4ff;
+        --text-soft: #a9bfd8;
+        --line: rgba(146, 197, 255, 0.24);
+        --shadow: rgba(14, 116, 144, 0.18);
+      }
+
+      body:not([data-theme="light"]) .text-slate-900,
+      body:not([data-theme="light"]) .text-slate-800,
+      body:not([data-theme="light"]) .text-slate-700 {
+        color: #f8fafc !important;
+      }
+
+      body:not([data-theme="light"]) .text-slate-500,
+      body:not([data-theme="light"]) .text-slate-400,
+      body:not([data-theme="light"]) .text-slate-300 {
+        color: #cbd5e1 !important;
+      }
+      .status-dot {
+        width: 10px;
+        height: 10px;
+        border-radius: 9999px;
+        display: inline-block;
+        box-shadow: 0 0 0 5px rgba(15, 23, 42, 0.7);
+      }
+      .premium-btn {
+        box-shadow: 0 10px 20px rgba(79, 70, 229, 0.28);
+      }
+      table thead th {
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        font-size: 10px;
+        color: #94a3b8;
+      }
+      .market-strip {
+        background: linear-gradient(90deg, rgba(79, 70, 229, 0.18), rgba(14, 165, 233, 0.10));
+        border-color: rgba(99, 102, 241, 0.16);
+      }
+      .market-strip * {
+        color: #e2e8f0;
+      }
+      table {
+        color: #e2e8f0;
+      }
+      input, select, button {
+        color: inherit;
+      }
+    </style>
+  </head>
+  <body class="bg-slate-100 text-slate-800">
+    <header class="bg-slate-900 text-white shadow-md border-b border-slate-800">
+      <div class="max-w-7xl mx-auto px-6 py-3.5 flex items-center justify-between gap-4">
+        <div class="flex items-center gap-3">
+          <div class="bg-gradient-to-br from-indigo-500 to-violet-600 p-2 rounded-xl font-bold text-lg tracking-wider flex items-center justify-center shadow-lg shadow-indigo-500/30">SA</div>
+          <div>
+            <h1 class="font-bold text-lg leading-none">Stage Analysis</h1>
+            <p class="text-xs text-slate-400">Market Dashboard & Stage Scanner</p>
+          </div>
+        </div>
+
+        <nav class="hidden lg:flex items-center gap-2 bg-slate-800/80 border border-slate-700 rounded-xl p-1">
+          <a href="dashboard.html" class="px-3 py-1.5 text-xs font-semibold rounded-lg bg-indigo-600 text-white shadow-sm">Dashboard</a>
+          <a href="index.html" class="px-3 py-1.5 text-xs font-semibold rounded-lg text-slate-200 hover:bg-slate-700 transition">Chart</a>
+          <a href="#watchlist" class="px-3 py-1.5 text-xs font-semibold rounded-lg text-slate-200 hover:bg-slate-700 transition">Watchlist</a>
+          <a href="#scan" class="px-3 py-1.5 text-xs font-semibold rounded-lg text-slate-200 hover:bg-slate-700 transition">Scan</a>
+          <a href="#risk" class="px-3 py-1.5 text-xs font-semibold rounded-lg text-slate-200 hover:bg-slate-700 transition">Risk</a>
+        </nav>
+
+        <div class="flex items-center gap-3">
+          <button id="themeToggleBtn" class="flex items-center gap-2 bg-slate-800/80 border border-slate-700 hover:bg-slate-700 text-slate-100 px-3 py-1.5 rounded-lg text-xs font-medium transition shadow-sm">
+            <span>🌙</span>
+            <span>Dark</span>
+          </button>
+          <button onclick="window.location.href='index.html'" class="premium-btn bg-indigo-600 hover:bg-indigo-500 text-white px-4 py-2 rounded-xl text-sm font-medium transition shadow-sm">
+            Open Chart
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <main class="max-w-7xl mx-auto p-6 space-y-6">
+      <section class="market-strip rounded-3xl border border-indigo-100 p-4 shadow-sm">
+        <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3">
+          <div>
+            <p class="text-[10px] uppercase tracking-[0.26em] text-slate-400">Market pulse</p>
+            <h2 class="mt-1 text-xl font-bold text-slate-100">Stage-driven stock screening</h2>
+          </div>
+          <div class="flex gap-2 text-xs font-semibold text-slate-300">
+            <span class="rounded-full bg-slate-900/60 border border-slate-700 px-2.5 py-1">Bullish trend</span>
+            <span class="rounded-full bg-slate-900/60 border border-slate-700 px-2.5 py-1">Volume filters</span>
+            <span class="rounded-full bg-slate-900/60 border border-slate-700 px-2.5 py-1">Risk control</span>
+          </div>
+        </div>
+      </section>
+
+      <section class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
+        <div class="glass-card rounded-2xl border border-slate-200 p-4 shadow-sm">
+          <div class="flex items-center justify-between mb-3">
+            <span class="text-xs font-semibold uppercase text-slate-500">Market Regime</span>
+            <span class="status-dot bg-emerald-500"></span>
+          </div>
+          <p id="marketRegimeValue" class="text-2xl font-bold text-slate-900">Bullish</p>
+          <p id="marketRegimeNote" class="text-sm text-slate-500 mt-2">Trend remains constructive with strong sector leadership</p>
+        </div>
+
+        <div class="glass-card rounded-2xl border border-slate-200 p-4 shadow-sm">
+          <div class="flex items-center justify-between mb-3">
+            <span class="text-xs font-semibold uppercase text-slate-500">Sector Leader</span>
+            <span class="status-dot bg-cyan-500"></span>
+          </div>
+          <p id="sectorLeaderValue" class="text-2xl font-bold text-slate-900">Technology</p>
+          <p id="sectorLeaderNote" class="text-sm text-slate-500 mt-2">Relative strength is outperforming the benchmark index</p>
+        </div>
+
+        <div class="glass-card rounded-2xl border border-slate-200 p-4 shadow-sm">
+          <div class="flex items-center justify-between mb-3">
+            <span class="text-xs font-semibold uppercase text-slate-500">Stage Mix</span>
+            <span class="status-dot bg-amber-500"></span>
+          </div>
+          <p id="stageMixValue" class="text-2xl font-bold text-slate-900">2 / 5 / 3</p>
+          <p id="stageMixNote" class="text-sm text-slate-500 mt-2">Stage 2 leaders: 5, Stage 1 bases: 3, Stage 4 weak: 2</p>
+        </div>
+
+        <div class="glass-card rounded-2xl border border-slate-200 p-4 shadow-sm">
+          <div class="flex items-center justify-between mb-3">
+            <span class="text-xs font-semibold uppercase text-slate-500">Risk Mode</span>
+            <span class="status-dot bg-red-500"></span>
+          </div>
+          <p id="riskModeValue" class="text-2xl font-bold text-slate-900">Moderate</p>
+          <p id="riskModeNote" class="text-sm text-slate-500 mt-2">Keep stop-losses tight near support and avoid weak sectors</p>
+        </div>
+      </section>
+
+      <section class="grid grid-cols-1 xl:grid-cols-3 gap-6">
+        <div id="watchlist" class="xl:col-span-2 glass-card rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+          <div class="px-5 py-4 border-b border-slate-200 flex items-center justify-between gap-3">
+            <div>
+              <p class="text-xs uppercase font-semibold tracking-wide text-slate-500">Watchlist</p>
+              <h2 class="text-xl font-bold text-slate-900">Stage screen snapshot</h2>
+            </div>
+            <span class="bg-emerald-100 text-emerald-700 px-2 py-1 rounded-full text-xs font-semibold">Live scan</span>
+          </div>
+
+          <div class="px-5 py-3 border-b border-slate-200 bg-slate-50">
+            <div class="grid grid-cols-1 md:grid-cols-5 gap-3 items-end">
+              <label class="text-xs font-semibold text-slate-600">
+                Stage
+                <select id="stageFilter" class="mt-1 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                  <option value="all">All</option>
+                  <option value="1">Stage 1</option>
+                  <option value="2" selected>Stage 2</option>
+                  <option value="3">Stage 3</option>
+                  <option value="4">Stage 4</option>
+                </select>
+              </label>
+
+              <label class="text-xs font-semibold text-slate-600">
+                Market Regime
+                <select id="marketFilter" class="mt-1 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                  <option value="all">All</option>
+                  <option value="Bullish" selected>Bullish</option>
+                  <option value="Neutral">Neutral</option>
+                  <option value="Bearish">Bearish</option>
+                </select>
+              </label>
+
+              <label class="text-xs font-semibold text-slate-600">
+                Sector
+                <select id="sectorFilter" class="mt-1 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                  <option value="all">All sectors</option>
+                  <option value="Technology">Technology</option>
+                  <option value="CommunicationServices">Communication Services</option>
+                  <option value="ConsumerDiscretionary">Consumer Discretionary</option>
+                  <option value="Financials">Financials</option>
+                  <option value="HealthCare">Health Care</option>
+                  <option value="Industrials">Industrials</option>
+                  <option value="Energy">Energy</option>
+                </select>
+              </label>
+
+              <label class="text-xs font-semibold text-slate-600">
+                Min RS
+                <select id="rsFilter" class="mt-1 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                  <option value="0">0%</option>
+                  <option value="5" selected>5%</option>
+                  <option value="10">10%</option>
+                  <option value="15">15%</option>
+                </select>
+              </label>
+
+              <label class="text-xs font-semibold text-slate-600">
+                Min Volume
+                <select id="volumeFilter" class="mt-1 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                  <option value="0.8">0.8x</option>
+                  <option value="1.1" selected>1.1x</option>
+                  <option value="1.5">1.5x</option>
+                  <option value="2.0">2.0x</option>
+                </select>
+              </label>
+
+              <label class="text-xs font-semibold text-slate-600 md:col-span-2">
+                Search ticker
+                <div class="mt-1 flex gap-2">
+                  <input id="tickerSearch" type="text" placeholder="e.g. NVDA" class="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+                  <button id="scanNowBtn" class="bg-indigo-600 hover:bg-indigo-500 text-white px-3 py-2 rounded-lg text-xs font-semibold whitespace-nowrap">Scan</button>
+                </div>
+              </label>
+            </div>
+          </div>
+
+          <div class="overflow-x-auto">
+            <table class="min-w-full text-sm">
+              <thead class="bg-slate-50 text-left text-slate-600">
+                <tr>
+                  <th class="px-4 py-3 font-semibold">Ticker</th>
+                  <th class="px-4 py-3 font-semibold">Stage</th>
+                  <th class="px-4 py-3 font-semibold">RS</th>
+                  <th class="px-4 py-3 font-semibold">Base</th>
+                  <th class="px-4 py-3 font-semibold">Volume</th>
+                  <th class="px-4 py-3 font-semibold">Setup</th>
+                  <th class="px-4 py-3 font-semibold">Action</th>
+                </tr>
+              </thead>
+              <tbody id="watchlistTableBody"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <div id="scan" class="glass-card rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+          <div class="px-5 py-4 border-b border-slate-200">
+            <p class="text-xs uppercase font-semibold tracking-wide text-slate-500">Scan setup</p>
+            <h2 class="text-xl font-bold text-slate-900">Active filters</h2>
+          </div>
+          <div class="p-5 space-y-3" id="scanChecklist"></div>
+        </div>
+      </section>
+
+      <section class="grid grid-cols-1 xl:grid-cols-2 gap-6">
+        <div class="glass-card rounded-2xl border border-slate-200 shadow-sm p-5">
+          <div class="flex items-center justify-between mb-4">
+            <div>
+              <p class="text-xs uppercase font-semibold tracking-wide text-slate-500">Breakout logic</p>
+              <h2 class="text-xl font-bold text-slate-900">Trade conditions</h2>
+            </div>
+            <span class="bg-indigo-100 text-indigo-700 px-2 py-1 rounded-full text-xs font-semibold">High conviction</span>
+          </div>
+
+          <div class="space-y-4 text-sm text-slate-600">
+            <div class="flex items-start gap-3">
+              <span class="mt-1 w-2.5 h-2.5 rounded-full bg-emerald-500"></span>
+              <div>
+                <p class="font-semibold text-slate-800">Price above 30W moving average</p>
+                <p>Only long entries when the trend is confirmed above the long-term trend line.</p>
+              </div>
+            </div>
+
+            <div class="flex items-start gap-3">
+              <span class="mt-1 w-2.5 h-2.5 rounded-full bg-cyan-500"></span>
+              <div>
+                <p class="font-semibold text-slate-800">Relative strength stronger than index</p>
+                <p>Prefer stocks with positive Mansfield RS and sector leadership.</p>
+              </div>
+            </div>
+
+            <div class="flex items-start gap-3">
+              <span class="mt-1 w-2.5 h-2.5 rounded-full bg-amber-500"></span>
+              <div>
+                <p class="font-semibold text-slate-800">Volume confirms breakouts</p>
+                <p>Look for volume above the 10-period average on breakout or continuation.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div id="risk" class="glass-card rounded-2xl border border-slate-200 shadow-sm p-5">
+          <div class="flex items-center justify-between mb-4">
+            <div>
+              <p class="text-xs uppercase font-semibold tracking-wide text-slate-500">Risk controls</p>
+              <h2 class="text-xl font-bold text-slate-900">Position sizing</h2>
+            </div>
+            <span class="bg-red-100 text-red-700 px-2 py-1 rounded-full text-xs font-semibold">Protect capital</span>
+          </div>
+
+          <div class="space-y-3">
+            <div class="rounded-xl border border-slate-200 bg-slate-50 p-3">
+              <div class="flex justify-between text-sm">
+                <span class="text-slate-600">Entry rule</span>
+                <span class="font-semibold text-slate-900">Breakout above pivot</span>
+              </div>
+            </div>
+            <div class="rounded-xl border border-slate-200 bg-slate-50 p-3">
+              <div class="flex justify-between text-sm">
+                <span class="text-slate-600">Stop-loss</span>
+                <span class="font-semibold text-slate-900">Below 13W low or 5% risk</span>
+              </div>
+            </div>
+            <div class="rounded-xl border border-slate-200 bg-slate-50 p-3">
+              <div class="flex justify-between text-sm">
+                <span class="text-slate-600">Target</span>
+                <span class="font-semibold text-slate-900">1:2 to 1:3 R:R</span>
+              </div>
+            </div>
+            <div class="rounded-xl border border-slate-200 bg-slate-50 p-3">
+              <div class="flex justify-between text-sm">
+                <span class="text-slate-600">Max risk</span>
+                <span class="font-semibold text-slate-900">1% to 2% per trade</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="grid grid-cols-1 xl:grid-cols-2 gap-6">
+        <div class="glass-card rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+          <div class="px-5 py-4 border-b border-slate-200 flex items-center justify-between gap-3">
+            <div>
+              <p class="text-xs uppercase font-semibold tracking-wide text-slate-500">Saved scans</p>
+              <h2 class="text-xl font-bold text-slate-900">Filter presets</h2>
+            </div>
+            <button id="saveScanBtn" class="bg-indigo-600 hover:bg-indigo-500 text-white px-3 py-2 rounded-lg text-xs font-semibold">Save current</button>
+          </div>
+          <div class="p-5 space-y-4">
+            <div class="flex gap-3">
+              <select id="savedScanPresetSelect" class="flex-1 rounded-lg border border-slate-300 bg-white px-3 py-2 text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                <option value="">No saved scans yet</option>
+              </select>
+              <button id="loadScanPresetBtn" class="bg-slate-800 hover:bg-slate-700 text-white px-3 py-2 rounded-lg text-xs font-semibold">Load</button>
+            </div>
+            <div class="rounded-xl border border-slate-200 bg-slate-50 p-3 text-sm text-slate-600" id="savedScanSummary">
+              Save a scan preset to reuse your favorite filters and market setup.
+            </div>
+          </div>
+        </div>
+
+        <div class="glass-card rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+          <div class="px-5 py-4 border-b border-slate-200 flex items-center justify-between gap-3">
+            <div>
+              <p class="text-xs uppercase font-semibold tracking-wide text-slate-500">Saved watchlist</p>
+              <h2 class="text-xl font-bold text-slate-900">Tracked names</h2>
+            </div>
+            <button id="saveWatchlistBtn" class="bg-emerald-600 hover:bg-emerald-500 text-white px-3 py-2 rounded-lg text-xs font-semibold">Save list</button>
+          </div>
+          <div class="p-5 space-y-3">
+            <ul id="savedWatchlistList" class="space-y-2 text-sm text-slate-700"></ul>
+          </div>
+        </div>
+      </section>
+
+      <section class="grid grid-cols-1 xl:grid-cols-[1.2fr_0.8fr] gap-6">
+        <div class="glass-card rounded-2xl border border-slate-200 shadow-sm p-5">
+          <div class="flex items-center justify-between mb-4">
+            <div>
+              <p class="text-xs uppercase font-semibold tracking-wide text-slate-500">Backtest</p>
+              <h2 class="text-xl font-bold text-slate-900">Historical summary</h2>
+            </div>
+            <span class="bg-violet-100 text-violet-700 px-2 py-1 rounded-full text-xs font-semibold">Recent 90d</span>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div class="rounded-xl border border-slate-200 bg-slate-50 p-4">
+              <p class="text-xs uppercase font-semibold text-slate-500">Win rate</p>
+              <p id="backtestWinRate" class="mt-2 text-3xl font-bold text-slate-900">0%</p>
+            </div>
+            <div class="rounded-xl border border-slate-200 bg-slate-50 p-4">
+              <p class="text-xs uppercase font-semibold text-slate-500">Avg R</p>
+              <p id="backtestAvgR" class="mt-2 text-3xl font-bold text-slate-900">0.0</p>
+            </div>
+            <div class="rounded-xl border border-slate-200 bg-slate-50 p-4">
+              <p class="text-xs uppercase font-semibold text-slate-500">Expectancy</p>
+              <p id="backtestExpectancy" class="mt-2 text-3xl font-bold text-slate-900">0.0%</p>
+            </div>
+            <div class="rounded-xl border border-slate-200 bg-slate-50 p-4">
+              <p class="text-xs uppercase font-semibold text-slate-500">Best sector</p>
+              <p id="backtestBestSector" class="mt-2 text-xl font-bold text-slate-900">-</p>
+            </div>
+          </div>
+        </div>
+
+        <div id="tickerDetailCard" class="glass-card rounded-2xl border border-slate-200 shadow-sm p-5 min-h-[220px]"></div>
+      </section>
+    </main>
+
+    <script src="theme.js"></script>
+    <script src="dashboard.js"></script>
+  </body>
+</html>
